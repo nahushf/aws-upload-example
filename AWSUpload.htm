@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.181.0.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Upload FIle</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 100px;
+        }
+
+        #list {
+            padding: 20px;
+        }
+
+        h1 {
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .form-control {
+            width: 40%;
+            margin: 10px;
+        }
+
+        p {
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+
+
+        AWS.config.update({
+            "accessKeyId": "YOUR_ACCESS_ID",
+            "secretAccessKey": "YOUR_SECRET_ACCESS_KEY",
+        });
+        AWS.config.region = 'YOUR_BUCKET_REGION'
+        var s3 = new AWS.S3();
+        var myBucketName = 'YOUR_BUCKET_NAME';
+
+        function uploadFile() {
+            var files = document.getElementById('file-name').files;
+            if (files.length <= 0) {
+                alert('Please select file first');
+                return;
+            }
+            params = { Bucket: myBucketName, Key: 'testing/' + files[0].name, Body: files[0], ContentType: files[0].type };
+            s3.putObject(params, function (err, data) {
+                if (err) {
+                    console.log(err)
+                } else {
+                    while (list.hasChildNodes()) {
+                        i = 0;
+                        list.removeChild(list.childNodes[0]);
+                        i++;
+                    }
+                    getList();
+                    alert('Successfully Uploaded ' + files[0].name)
+                }
+            })
+
+        }
+
+        function getList() {
+            var params1 = {
+                Bucket: myBucketName, /* required */
+                Delimiter: '/testing/',
+                EncodingType: "url",
+            };
+            s3.listObjects(params1, function (err, data) {
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    console.log(data)
+                    data.Contents.forEach(element => {
+                        let p = document.createElement('p')
+                        p.innerHTML = element.Key;
+                        p.addEventListener('click', () => deleteItem(element.Key))
+                        document.getElementById('list').appendChild(p);
+                    });
+                }
+            })
+        }
+
+        function deleteItem(Key) {
+            var deleteParams = {
+                Bucket: myBucketName,
+                Key
+            }
+            var confirmation = confirm('Do you really want to delete the file ' + Key)
+            console.log(confirmation)
+            if (confirmation) {
+                s3.deleteObject(deleteParams, function (err, data) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        alert(Key + 'is deleted success fully.')
+                        var list = document.getElementById("list");
+                        while (list.hasChildNodes()) {
+                            i = 0;
+                            list.removeChild(list.childNodes[0]);
+                            i++;
+                        }
+                        getList(); padding
+                    }
+                })
+                return;
+            }
+            return;
+        }
+
+    </script>
+</head>
+
+<body>
+    <form class="col-sm-12" onsubmit="uploadFile()" enctype="multipart/form-data" method="post">
+        <label for="file-name">
+            Select File :
+        </label>
+        <input class="form-control" id="file-name" multiple type="file" />
+        <div>
+            <button class="btn btn-success" onclick="uploadFile()" type="button">Upload File</button>
+        </div>
+    </form>
+    <br/>
+    <div>
+        <h1>List Of Files</h1>
+        <div id="list">
+            <button class="btn btn-warning" onclick="getList()">Get Files</button>
+        </div>
+    </div>
+
+</html>
