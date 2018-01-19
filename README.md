@@ -1,4 +1,4 @@
-WS Upload any file Example in HTML.
+AWS Upload any file Example in HTML.
 
 **Steps to Use**
 
